@@ -294,22 +294,12 @@ class Client
     )
     {
         $request = new Request('/login');
-        $request->send($com);
         $request->setArgument('name', $username);
         $request->setArgument('password', $password);
-        $request->verify($com)->send($com);
-
+        $request->send($com);
         $response = new Response($com, false, $timeout);
-        if ($response->getType() === Response::TYPE_FINAL) {
-            return null === $response->getProperty('ret');
-        } else {
-            while ($response->getType() !== Response::TYPE_FINAL
-                && $response->getType() !== Response::TYPE_FATAL
-            ) {
-                $response = new Response($com, false, $timeout);
-            }
-            return false;
-        }
+
+        return $response->getType() === Response::TYPE_FINAL;
     }
 
     /**
