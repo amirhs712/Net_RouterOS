@@ -15,24 +15,29 @@
  * @version   GIT: $Id$
  * @link      http://pear2.php.net/PEAR2_Net_RouterOS
  */
+
 /**
  * The namespace declaration.
  */
+
 namespace PEAR2\Net\RouterOS;
 
 /**
  * Refers to transmitter direction constants.
  */
+
 use PEAR2\Net\Transmitter\Stream as S;
 
 /**
  * Refers to the cryptography constants.
  */
+
 use PEAR2\Net\Transmitter\NetworkStream as N;
 
 /**
  * Catches arbitrary exceptions at some points.
  */
+
 use Exception as E;
 
 /**
@@ -119,17 +124,17 @@ class Client
      * Creates a new instance of a RouterOS API client with the specified
      * settings.
      *
-     * @param string        $host     Hostname (IP or domain) of RouterOS.
-     * @param string        $username The RouterOS username.
-     * @param string        $password The RouterOS password.
-     * @param int|null      $port     The port on which the RouterOS host
+     * @param string $host Hostname (IP or domain) of RouterOS.
+     * @param string $username The RouterOS username.
+     * @param string $password The RouterOS password.
+     * @param int|null $port The port on which the RouterOS host
      *     provides the API service. You can also specify NULL, in which case
      *     the port will automatically be chosen between 8728 and 8729,
      *     depending on the value of $crypto.
-     * @param bool          $persist  Whether or not the connection should be a
+     * @param bool $persist Whether or not the connection should be a
      *     persistent one.
-     * @param double|null   $timeout  The timeout for the connection.
-     * @param string        $crypto   The encryption for this connection.
+     * @param double|null $timeout The timeout for the connection.
+     * @param string $crypto The encryption for this connection.
      *     Must be one of the PEAR2\Net\Transmitter\NetworkStream::CRYPTO_*
      *     constants. Off by default. RouterOS currently supports only TLS, but
      *     the setting is provided in this fashion for forward compatibility's
@@ -137,7 +142,7 @@ class Client
      *     don't specify a context and your default context uses the value
      *     "DEFAULT" for ciphers, "ADH" will be automatically added to the list
      *     of ciphers.
-     * @param resource|null $context  A context for the socket.
+     * @param resource|null $context A context for the socket.
      *
      * @see sendSync()
      * @see sendAsync()
@@ -151,7 +156,8 @@ class Client
         $timeout = null,
         $crypto = N::CRYPTO_OFF,
         $context = null
-    ) {
+    )
+    {
         $this->com = new Communicator(
             $host,
             $port,
@@ -163,10 +169,10 @@ class Client
         );
         $timeout = null == $timeout
             ? ini_get('default_socket_timeout')
-            : (int) $timeout;
+            : (int)$timeout;
         //Login the user if necessary
         if ((!$persist
-            || !($old = $this->com->getTransmitter()->lock(S::DIRECTION_ALL)))
+                || !($old = $this->com->getTransmitter()->lock(S::DIRECTION_ALL)))
             && $this->com->getTransmitter()->isFresh()
         ) {
             if (!static::login($this->com, $username, $password, $timeout)) {
@@ -212,26 +218,27 @@ class Client
         } elseif (null === $arg) {
             return $this->completeRequest();
         }
-        return $this->completeRequest((string) $arg);
+        return $this->completeRequest((string)$arg);
     }
 
     /**
      * Login to a RouterOS connection.
      *
-     * @param Communicator $com      The communicator to attempt to login to.
-     * @param string       $username The RouterOS username.
-     * @param string       $password The RouterOS password.
-     * @param int|null     $timeout  The time to wait for each response. NULL
+     * @param Communicator $com The communicator to attempt to login to.
+     * @param string $username The RouterOS username.
+     * @param string $password The RouterOS password.
+     * @param int|null $timeout The time to wait for each response. NULL
      *     waits indefinitely.
      *
      * @return bool TRUE on success, FALSE on failure.
      */
     public static function login(
         Communicator $com,
-        $username,
-        $password = '',
-        $timeout = null
-    ) {
+                     $username,
+                     $password = '',
+                     $timeout = null
+    )
+    {
         if (null !== ($remoteCharset = $com->getCharset($com::CHARSET_REMOTE))
             && null !== ($localCharset = $com->getCharset($com::CHARSET_LOCAL))
         ) {
@@ -255,8 +262,8 @@ class Client
                 $com->getTransmitter()->lock($old, true);
             }
             throw ($e instanceof NotSupportedException
-            || $e instanceof UnexpectedValueException
-            || !$com->getTransmitter()->isDataAwaiting()) ? new SocketException(
+                || $e instanceof UnexpectedValueException
+                || !$com->getTransmitter()->isDataAwaiting()) ? new SocketException(
                 'This is not a compatible RouterOS service',
                 SocketException::CODE_SERVICE_INCOMPATIBLE,
                 $e
@@ -270,32 +277,26 @@ class Client
      * This is the actual login procedure, applied regardless of persistence and
      * charset settings.
      *
-     * @param Communicator $com      The communicator to attempt to login to.
-     * @param string       $username The RouterOS username.
-     * @param string       $password The RouterOS password. Potentially parsed
+     * @param Communicator $com The communicator to attempt to login to.
+     * @param string $username The RouterOS username.
+     * @param string $password The RouterOS password. Potentially parsed
      *     already by iconv.
-     * @param int|null     $timeout  The time to wait for each response. NULL
+     * @param int|null $timeout The time to wait for each response. NULL
      *     waits indefinitely.
      *
      * @return bool TRUE on success, FALSE on failure.
      */
     private static function _login(
         Communicator $com,
-        $username,
-        $password = '',
-        $timeout = null
-    ) {
+                     $username,
+                     $password = '',
+                     $timeout = null
+    )
+    {
         $request = new Request('/login');
         $request->send($com);
-        $response = new Response($com, false, $timeout);
         $request->setArgument('name', $username);
-        $request->setArgument(
-            'response',
-            '00' . md5(
-                chr(0) . $password
-                . pack('H*', $response->getProperty('ret'))
-            )
-        );
+        $request->setArgument('password', $password);
         $request->verify($com)->send($com);
 
         $response = new Response($com, false, $timeout);
@@ -323,11 +324,11 @@ class Client
      * disable charset convertion, and data will be both sent and received "as
      * is".
      *
-     * @param mixed $charset     The charset to set. If $charsetType is
+     * @param mixed $charset The charset to set. If $charsetType is
      *     {@link Communicator::CHARSET_ALL}, you can supply either a string to
      *     use for all charsets, or an array with the charset types as keys, and
      *     the charsets as values.
-     * @param int   $charsetType Which charset to set. Valid values are the
+     * @param int $charsetType Which charset to set. Valid values are the
      *     Communicator::CHARSET_* constants. Any other value is treated as
      *     {@link Communicator::CHARSET_ALL}.
      *
@@ -340,7 +341,8 @@ class Client
     public function setCharset(
         $charset,
         $charsetType = Communicator::CHARSET_ALL
-    ) {
+    )
+    {
         return $this->com->setCharset($charset, $charsetType);
     }
 
@@ -365,7 +367,7 @@ class Client
     /**
      * Sends a request and waits for responses.
      *
-     * @param Request       $request  The request to send.
+     * @param Request $request The request to send.
      * @param callback|null $callback Optional. A function that is to be
      *     executed when new responses for this request are available.
      *     The callback takes two parameters. The {@link Response} object as
@@ -422,8 +424,8 @@ class Client
      * Checks if a request is active. A request is considered active if it's a
      * pending request and/or has responses that are not yet extracted.
      *
-     * @param string $tag    The tag of the request to look for.
-     * @param int    $filter One of the FILTER_* constants. Limits the search
+     * @param string $tag The tag of the request to look for.
+     * @param int $filter One of the FILTER_* constants. Limits the search
      *     to the specified places.
      *
      * @return bool TRUE if the request is active, FALSE otherwise.
@@ -435,10 +437,10 @@ class Client
     {
         $result = 0;
         if ($filter & self::FILTER_CALLBACK) {
-            $result |= (int) array_key_exists($tag, $this->callbacks);
+            $result |= (int)array_key_exists($tag, $this->callbacks);
         }
         if ($filter & self::FILTER_BUFFER) {
-            $result |= (int) array_key_exists($tag, $this->responseBuffer);
+            $result |= (int)array_key_exists($tag, $this->responseBuffer);
         }
         return 0 !== $result;
     }
@@ -485,7 +487,7 @@ class Client
         $result = $hasNoTag ? array()
             : $this->extractNewResponses($tag)->toArray();
         while ((!$hasNoTag && $this->isRequestActive($tag))
-        || ($hasNoTag && 0 !== $this->getPendingRequestsCount())
+            || ($hasNoTag && 0 !== $this->getPendingRequestsCount())
         ) {
             $newReply = $this->dispatchNextResponse(null);
             if ($newReply->getTag() === $tag) {
@@ -497,8 +499,8 @@ class Client
                         $result = array_merge(
                             $result,
                             $this->isRequestActive($tag)
-                            ? $this->extractNewResponses($tag)->toArray()
-                            : array()
+                                ? $this->extractNewResponses($tag)->toArray()
+                                : array()
                         );
                     }
                     break;
@@ -561,9 +563,9 @@ class Client
      * are no more pending requests or when a specified timeout has passed
      * (whichever comes first).
      *
-     * @param int|null $sTimeout  Timeout for the loop.
+     * @param int|null $sTimeout Timeout for the loop.
      *     If NULL, there is no time limit.
-     * @param int      $usTimeout Microseconds to add to the time limit.
+     * @param int $usTimeout Microseconds to add to the time limit.
      *
      * @return bool TRUE when there are any more pending requests, FALSE
      *     otherwise.
@@ -715,7 +717,7 @@ class Client
     public function setStreamingResponses($streamingResponses)
     {
         $oldValue = $this->_streamingResponses;
-        $this->_streamingResponses = (bool) $streamingResponses;
+        $this->_streamingResponses = (bool)$streamingResponses;
         return $oldValue;
     }
 
@@ -815,13 +817,13 @@ class Client
      * Dispatches the next response in queue, i.e. it executes the associated
      * callback if there is one, or places the response in the response buffer.
      *
-     * @param int|null $sTimeout  If a response is not immediately available,
+     * @param int|null $sTimeout If a response is not immediately available,
      *     wait this many seconds.
      *     If NULL, wait indefinitely.
-     * @param int      $usTimeout Microseconds to add to the waiting time.
+     * @param int $usTimeout Microseconds to add to the waiting time.
      *
-     * @throws SocketException When there's no response within the time limit.
      * @return Response The dispatched response.
+     * @throws SocketException When there's no response within the time limit.
      */
     protected function dispatchNextResponse($sTimeout = 0, $usTimeout = 0)
     {
